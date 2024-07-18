@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException, ElementClickInterceptedException
 
 # Path to Chrome Driver
-chromedriver_path = '../OpenAI/chromedriver.exe'  # Replace with your actual driver path
+chromedriver_path = '../OpenAI/chromedriver.exe'  # Replace with your actual driver path if Chrome Driver Library does not work
 
 
 def schedule_emails(start_time, steps):

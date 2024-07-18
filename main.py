@@ -11,45 +11,25 @@ from selenium.common.exceptions import WebDriverException, TimeoutException, NoS
 # Path to Chrome Driver
 chromedriver_path = '../OpenAI/chromedriver.exe'  # Replace with your actual driver path if Chrome Driver Library does not work
 
-
-def schedule_emails(start_time, steps):
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    # options.add_argument('--no-sandbox')
-    # options.add_argument('--disable-dev-shm-usage')
-
+def login_to_system(driver):
     try:
-        driver = webdriver.Chrome(options=options)  # Will automatically get driver from library
-    except OSError as err:
-        if err.errno == errno.ENOENT:
-            raise WebDriverException(
-                "'%s' executable needs to be in PATH. %s" % (
-                    os.path.basename(chromedriver_path), "Ensure chromedriver is in your PATH.")
-            )
-        elif err.errno == errno.EACCES:
-            raise WebDriverException(
-                "'%s' executable may have wrong permissions. %s" % (
-                    os.path.basename(chromedriver_path), "Ensure chromedriver has the correct permissions.")
-            )
-
-    def login_to_system():
-        try:
-            driver.get("https://system.cliqly.com")
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'loginEmail')))
-            driver.find_element(By.ID, 'loginEmail').send_keys("info@xandercon.com.au")
-            driver.find_element(By.ID, 'floatingPassword').send_keys("1787496593")
-            driver.find_element(By.ID, 'userLoginBtn').click()
-        except Exception as e:
-            print(f"Error occurred while logging in: {e}")
-            driver.quit()
-
-    login_to_system()
-
-    try:
+        driver.get("https://system.cliqly.com")
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'loginEmail')))
+        driver.find_element(By.ID, 'loginEmail').send_keys("info@xandercon.com.au")
+        driver.find_element(By.ID, 'floatingPassword').send_keys("1787496593")
+        driver.find_element(By.ID, 'userLoginBtn').click()
+        time.sleep(10)
         driver.get("https://system.cliqly.com/member/sendmailpro3/")
-        time.sleep(6)
+    except Exception as e:
+        print(f"Error occurred while logging in: {e}")
+        driver.quit()
+        raise
+
+def schedule_emails(driver, start_time):
+    try:
+        time.sleep(15)
         driver.get("https://system.cliqly.com/member/sendmailpro3/schedule")
-        time.sleep(6)
+
 
         # Initialize variable
         openers_data = None
@@ -133,7 +113,7 @@ def schedule_emails(start_time, steps):
                 from_name.send_keys("Alex")
                 print("From Name has been Set!")
 
-        target_date = datetime.now() + timedelta(days=1)
+        target_date = datetime.now() + timedelta(days=2)
         target_day = target_date.day
         time.sleep(3)
 
@@ -223,9 +203,6 @@ def schedule_emails(start_time, steps):
         print("Element click intercepted: ", e)
     except Exception as e:
         print("Error occurred: ", e)
-    finally:
-        driver.quit()
-
 
 def generate_schedule(start_time_str, end_time_str, steps):
     start_time = datetime.strptime(start_time_str, "%H:%M")
@@ -242,15 +219,36 @@ def generate_schedule(start_time_str, end_time_str, steps):
 
     return schedule_times
 
-
 def main():
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
+
+    try:
+        driver = webdriver.Chrome(options=options)  # Will automatically get driver from library
+    except OSError as err:
+        if err.errno == errno.ENOENT:
+            raise WebDriverException(
+                "'%s' executable needs to be in PATH. %s" % (
+                    os.path.basename(chromedriver_path), "Ensure chromedriver is in your PATH.")
+            )
+        elif err.errno == errno.EACCES:
+            raise WebDriverException(
+                "'%s' executable may have wrong permissions. %s" % (
+                    os.path.basename(chromedriver_path), "Ensure chromedriver has the correct permissions.")
+            )
+
+    login_to_system(driver)
+
     afternoon_schedule = generate_schedule("04:00", "17:20", 160)
 
     for i, schedule_time in enumerate(afternoon_schedule, 1):
         print(f"Executing for time: {schedule_time} with Step: {i}")
-        schedule_emails(start_time=schedule_time, steps=160)
+        schedule_emails(driver, start_time=schedule_time)
         # time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
 
+    driver.quit()
 
 if __name__ == "__main__":
     main()

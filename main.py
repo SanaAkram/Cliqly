@@ -15,8 +15,8 @@ chromedriver_path = '../OpenAI/chromedriver.exe'  # Replace with your actual dri
 def schedule_emails(start_time, steps):
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
 
     try:
         driver = webdriver.Chrome(options=options)  # Will automatically get driver from library
@@ -47,22 +47,22 @@ def schedule_emails(start_time, steps):
 
     try:
         driver.get("https://system.cliqly.com/member/sendmailpro3/")
-        time.sleep(20)
+        time.sleep(6)
         driver.get("https://system.cliqly.com/member/sendmailpro3/schedule")
-        time.sleep(10)
+        time.sleep(6)
 
         # Initialize variable
         openers_data = None
         try:
             openers_data = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'openers_data')))
             if openers_data:
-                time.sleep(10)
+                time.sleep(6)
                 openers_data.clear()
                 openers_data.send_keys("20000")
                 print("Openers Button has been Clicked!")
         except Exception as e:
             if openers_data:
-                time.sleep(20)
+                time.sleep(10)
                 openers_data.clear()
                 openers_data.send_keys("20000")
                 print("Openers Button has been Clicked!")
@@ -72,12 +72,12 @@ def schedule_emails(start_time, steps):
         try:
             next_step_button = WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.ID, 'subsTypeBtn')))
             if next_step_button:
-                time.sleep(20)
+                time.sleep(6)
                 next_step_button.click()
                 print("Next Step Button has been Clicked!")
         except Exception as e:
             if next_step_button:
-                time.sleep(20)
+                time.sleep(10)
                 next_step_button.click()
                 print("Next Step Button has been Clicked!")
 
@@ -87,12 +87,12 @@ def schedule_emails(start_time, steps):
             creative_box_1 = WebDriverWait(driver, 60).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="creativeBox_1"]/div[3]/button')))
             if creative_box_1:
-                time.sleep(20)
+                time.sleep(6)
                 creative_box_1.click()
                 print("Creative Box 1 has been Clicked!")
         except Exception as e:
             if creative_box_1:
-                time.sleep(20)
+                time.sleep(10)
                 creative_box_1.click()
                 print("Creative Box 1 has been Clicked!")
 
@@ -110,7 +110,7 @@ def schedule_emails(start_time, steps):
                 print("User URL Link has been Set!")
         except Exception as e:
             if user_url_link:
-                time.sleep(20)
+                time.sleep(10)
                 user_url_link.click()
                 user_url_link.clear()
                 user_url_link.send_keys("https://linktracksystem.biz/?affid=420508&subid=cPRO")
@@ -127,7 +127,7 @@ def schedule_emails(start_time, steps):
                 print("From Name has been Set!")
         except Exception as e:
             if from_name:
-                time.sleep(20)
+                time.sleep(10)
                 from_name.click()
                 from_name.clear()
                 from_name.send_keys("Alex")
@@ -135,20 +135,20 @@ def schedule_emails(start_time, steps):
 
         target_date = datetime.now() + timedelta(days=1)
         target_day = target_date.day
-        time.sleep(10)
+        time.sleep(3)
 
         # Initialize variable
         date_calender = None
         try:
             date_calender = WebDriverWait(driver, 60).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, '#s_date1 .col-md-4:nth-child(1)')))
-            time.sleep(10)
+            time.sleep(6)
             if date_calender:
                 date_calender.click()
                 print("Date Calendar has been Clicked!")
         except Exception as e:
             if date_calender:
-                time.sleep(20)
+                time.sleep(10)
                 date_calender.click()
                 print("Date Calendar has been Clicked!")
 
@@ -249,7 +249,7 @@ def main():
     for i, schedule_time in enumerate(afternoon_schedule, 1):
         print(f"Executing for time: {schedule_time} with Step: {i}")
         schedule_emails(start_time=schedule_time, steps=160)
-        time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
+        # time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
 
 
 if __name__ == "__main__":

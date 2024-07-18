@@ -190,7 +190,7 @@ def schedule_emails(start_time, steps):
         except Exception as e:
             if minutes_select:
                 time.sleep(20)
-                Select(minutes_select).select_by_visible_text(f"{start_time.minute:02d} mins")
+                Select(minutes_select).select_by_visible_text(f"{start_time.minute:01d} mins")
                 print("Minutes Select has been Set!")
 
         # Initialize variable

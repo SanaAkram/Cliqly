@@ -95,7 +95,6 @@ def schedule_emails(driver, start_time):
         try:
             next_step_button = WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.ID, 'subsTypeBtn')))
             if next_step_button:
-                time.sleep(6)
                 next_step_button.click()
                 print("Next Step Button has been Clicked!")
         except Exception as e:
@@ -108,12 +107,12 @@ def schedule_emails(driver, start_time):
         button = None
         creative_box = None
         try:
+            time.sleep(4)
             # Locate the creative box by its ID
             creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
-
-            # Find the button within the creative box
             button = WebDriverWait(creative_box, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
             if button:
+                time.sleep(1)
                 button.click()
                 print("Creative Box 1 has been Clicked!")
         except Exception as e:
@@ -121,7 +120,10 @@ def schedule_emails(driver, start_time):
                 time.sleep(4)
                 button = WebDriverWait(creative_box, 90).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
-
+            if button:
+                creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
+                button = WebDriverWait(creative_box, 60).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
             # Call the function to click on the element
             print("Trying to click Creative Box 1")
             click_until_success(driver, button, delay=4)
@@ -291,9 +293,9 @@ def main():
     login_to_system(driver)
 
     afternoon_schedule = generate_schedule("04:00", "17:20", 200)
-    iterate = 110
-    for i, schedule_time in enumerate(afternoon_schedule[iterate:], 1):
-        print(f"Executing for time: {schedule_time} with Step: {i+iterate}")
+    # iterate = 167
+    for i, schedule_time in enumerate(afternoon_schedule, 1):
+        print(f"Executing for time: {schedule_time} with Step: {i}")
         time.sleep(1)
         driver.execute_script("document.body.style.zoom = '33%';")
         schedule_emails(driver, start_time=schedule_time)

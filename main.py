@@ -240,7 +240,7 @@ def schedule_emails(driver, start_time):
             from_name.send_keys("Alex")
             print("From Name has been Set!")
 
-        target_date = datetime.now() + timedelta(days=2)
+        target_date = datetime.now() + timedelta(days=2) #No. of days in Advance
         target_day = target_date.day
         time.sleep(3)
 
@@ -382,5 +382,5 @@ def main():
     driver.quit()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #Run this script click !
     main()

@@ -95,7 +95,10 @@ def click_creative_box(driver):
         except Exception as e:
             print(f"Err: Retrying...")
             driver.get("https://system.cliqly.com/member/sendmailpro3/schedule")
-            driver.maximize_window()
+            try:
+                driver.maximize_window()
+            except Exception as e:
+                print("Window already maximized !")
             time.sleep(1)
             driver.execute_script("document.body.style.zoom = '33%';")
             # Initialize variable
@@ -328,14 +331,20 @@ def generate_schedule(start_time_str, end_time_str, steps):
     start_time = datetime.strptime(start_time_str, "%H:%M")
     end_time = datetime.strptime(end_time_str, "%H:%M")
     total_duration_minutes = (end_time - start_time).total_seconds() / 60
-    interval_minutes = total_duration_minutes / steps
+    interval_minutes = total_duration_minutes / (steps - 1)  # Adjust interval calculation
 
     current_time = start_time
     schedule_times = []
 
-    for _ in range(steps):
+    for i in range(steps):
+        if current_time > end_time:
+            break
         schedule_times.append(current_time.time())
         current_time += timedelta(minutes=interval_minutes)
+
+    # Ensure the last time is exactly the end time
+    if schedule_times[-1] != end_time.time():
+        schedule_times[-1] = end_time.time()
 
     return schedule_times
 

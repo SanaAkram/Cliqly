@@ -331,20 +331,18 @@ def generate_schedule(start_time_str, end_time_str, steps):
     start_time = datetime.strptime(start_time_str, "%H:%M")
     end_time = datetime.strptime(end_time_str, "%H:%M")
     total_duration_minutes = (end_time - start_time).total_seconds() / 60
-    interval_minutes = total_duration_minutes / (steps - 1)  # Adjust interval calculation
+    interval_minutes = total_duration_minutes / steps
 
     current_time = start_time
     schedule_times = []
 
-    for i in range(steps):
-        if current_time > end_time:
-            break
+    for _ in range(steps):
         schedule_times.append(current_time.time())
         current_time += timedelta(minutes=interval_minutes)
 
     # Ensure the last time is exactly the end time
     if schedule_times[-1] != end_time.time():
-        schedule_times[-1] = end_time.time()
+        schedule_times.append(end_time.time())
 
     return schedule_times
 
@@ -372,11 +370,14 @@ def main():
     login_to_system(driver)
 
     afternoon_schedule = generate_schedule("04:00", "17:20", 200)
-    for i, schedule_time in enumerate(afternoon_schedule, 1):
-        print(f"Executing for time: {schedule_time} with Step: {i - 1}")
+    inter = 0
+    for i, schedule_time in enumerate(afternoon_schedule[inter:], 1):
+        print(f"Executing for time: {schedule_time} with Step: {i + inter - 1}")
         time.sleep(1)
         driver.execute_script("document.body.style.zoom = '33%';")
-        schedule_emails(driver, start_time=schedule_time)
+        result = schedule_emails(driver, start_time=schedule_time)
+        if result is False:
+            inter = i + inter -1
         # time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
     print("Yay!!!!!!!!!!!")
     driver.quit()

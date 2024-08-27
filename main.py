@@ -6,10 +6,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException, ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException, \
+    ElementClickInterceptedException
 
 # Path to Chrome Driver
 chromedriver_path = '../OpenAI/chromedriver.exe'  # Replace with your actual driver path if Chrome Driver Library does not work
+
 
 def login_to_system(driver):
     try:
@@ -50,7 +52,7 @@ def click_until_success(driver, element, delay=10, max_attempts=None):
                 element.click()
                 print("Element has been clicked successfully!")
                 return True
-            else: # Exit the function if the click is successful
+            else:  # Exit the function if the click is successful
                 driver.get(element)
         except Exception as e:
             driver.execute_script("arguments[0].scrollIntoView();", element)
@@ -60,8 +62,89 @@ def click_until_success(driver, element, delay=10, max_attempts=None):
                 print(f"Maximum attempts ({max_attempts}) reached. Could not click the element.")
                 return False
             if attempts > 2000:
-                return False# Exit the function if max attempts are reached
+                return False  # Exit the function if max attempts are reached
             time.sleep(delay)
+
+
+def click_until_success_creative_box(driver, button, delay=4):
+    clicked = False
+    while not clicked:
+        try:
+            # Attempt to click the button
+            button.click()
+            clicked = True
+            print("Button clicked successfully!")
+        except Exception as e:
+            print(f"Click failed. Retrying in {delay} seconds...")
+            time.sleep(delay)
+
+
+def click_creative_box(driver):
+    while True:
+        try:
+            time.sleep(3)
+            # Locate the creative box by its ID
+            creative_box = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
+            button = WebDriverWait(creative_box, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
+            if button:
+                time.sleep(1)
+                click_until_success_creative_box(driver, button)
+                print("Creative Box 1 has been clicked!")
+                break  # Exit the loop once the button is successfully clicked
+        except Exception as e:
+            print(f"Err: Retrying...")
+            driver.get("https://system.cliqly.com/member/sendmailpro3/schedule")
+            driver.maximize_window()
+            time.sleep(1)
+            driver.execute_script("document.body.style.zoom = '33%';")
+            # Initialize variable
+            openers_data = None
+            try:
+                openers_data = WebDriverWait(driver, 160).until(EC.presence_of_element_located((By.ID, 'openers_data')))
+                if openers_data:
+                    # time.sleep(6)
+                    openers_data.clear()
+                    openers_data.send_keys("20000")
+                    print("Openers Button has been Clicked!")
+            except Exception as e:
+                print("Trying to click Openers Button ")
+                click_until_success(driver, openers_data, delay=4)
+                openers_data.clear()
+                openers_data.send_keys("20000")
+
+            # Initialize variable
+            next_step_button = None
+            try:
+                next_step_button = WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.ID, 'subsTypeBtn')))
+                if next_step_button:
+                    next_step_button.click()
+                    print("Next Step Button has been Clicked!")
+            except Exception as e:
+                if not next_step_button:
+                    next_step_button = WebDriverWait(driver, 60).until(
+                        EC.element_to_be_clickable((By.ID, 'subsTypeBtn')))
+                print("Trying to click Next Step Button ")
+                click_until_success(driver, next_step_button, delay=4)
+            try:
+                creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
+                button = WebDriverWait(creative_box, 60).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
+                if button:
+                    time.sleep(1)
+                    click_until_success_creative_box(driver, button)
+                    print("Creative Box 1 has been clicked!")
+                    break
+            except TimeoutException as e:
+                creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
+                button = WebDriverWait(creative_box, 60).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
+                if button:
+                    time.sleep(1)
+                    click_until_success_creative_box(driver, button)
+                    print("Creative Box 1 has been clicked!")
+                    break
+
 
 
 def schedule_emails(driver, start_time):
@@ -71,8 +154,10 @@ def schedule_emails(driver, start_time):
             # If it doesn't, navigate to the URL with '/schedule' added
             driver.get(current_url.rstrip('/') + "/schedule")
         print(driver.current_url)
-        # Maximize the browser window
-        driver.maximize_window()
+        try:
+            driver.maximize_window()
+        except Exception as e:
+            print("Window already maximized !")
         time.sleep(1)
         driver.execute_script("document.body.style.zoom = '33%';")
         # Initialize variable
@@ -108,25 +193,9 @@ def schedule_emails(driver, start_time):
         creative_box = None
         try:
             time.sleep(4)
-            # Locate the creative box by its ID
-            creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
-            button = WebDriverWait(creative_box, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
-            if button:
-                time.sleep(1)
-                button.click()
-                print("Creative Box 1 has been Clicked!")
+            click_creative_box(driver)
         except Exception as e:
-            if not button:
-                time.sleep(4)
-                button = WebDriverWait(creative_box, 90).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
-            if button:
-                creative_box = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'creativeBox_1')))
-                button = WebDriverWait(creative_box, 60).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '.btn.btn-primary.sMailBtn')))
-            # Call the function to click on the element
-            print("Trying to click Creative Box 1")
-            click_until_success(driver, button, delay=4)
+            click_creative_box(driver)
         track_option = None
         try:
             track_option = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, 'trackOpt1')))
@@ -168,7 +237,7 @@ def schedule_emails(driver, start_time):
             from_name.send_keys("Alex")
             print("From Name has been Set!")
 
-        target_date = datetime.now() + timedelta(days=1)
+        target_date = datetime.now() + timedelta(days=2)
         target_day = target_date.day
         time.sleep(3)
 
@@ -183,7 +252,6 @@ def schedule_emails(driver, start_time):
         except Exception as e:
             print("Trying to click Date Calendar")
             click_until_success(driver, date_calender, delay=4)
-
 
         # Initialize variable
         date_picker = None
@@ -255,6 +323,7 @@ def schedule_emails(driver, start_time):
     except Exception as e:
         print("Error occurred: ", e)
 
+
 def generate_schedule(start_time_str, end_time_str, steps):
     start_time = datetime.strptime(start_time_str, "%H:%M")
     end_time = datetime.strptime(end_time_str, "%H:%M")
@@ -269,6 +338,7 @@ def generate_schedule(start_time_str, end_time_str, steps):
         current_time += timedelta(minutes=interval_minutes)
 
     return schedule_times
+
 
 def main():
     options = webdriver.ChromeOptions()
@@ -293,15 +363,15 @@ def main():
     login_to_system(driver)
 
     afternoon_schedule = generate_schedule("04:00", "17:20", 200)
-    # iterate = 167
     for i, schedule_time in enumerate(afternoon_schedule, 1):
-        print(f"Executing for time: {schedule_time} with Step: {i}")
+        print(f"Executing for time: {schedule_time} with Step: {i - 1}")
         time.sleep(1)
         driver.execute_script("document.body.style.zoom = '33%';")
         schedule_emails(driver, start_time=schedule_time)
         # time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
-
+    print("Yay!!!!!!!!!!!")
     driver.quit()
+
 
 if __name__ == "__main__":
     main()

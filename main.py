@@ -240,7 +240,7 @@ def schedule_emails(driver, start_time):
             from_name.send_keys("Alex")
             print("From Name has been Set!")
 
-        target_date = datetime.now() + timedelta(days=2) #No. of days in Advance
+        target_date = datetime.now() + timedelta(days=3) #No. of days in Advance
         target_day = target_date.day
         time.sleep(3)
 
@@ -318,13 +318,16 @@ def schedule_emails(driver, start_time):
 
     except TimeoutException as e:
         print("Timeout occurred while waiting for an element: ", e)
+        return False
     except NoSuchElementException as e:
         print("Element not found: ", e)
+        return False
     except ElementClickInterceptedException as e:
         print("Element click intercepted: ")
         return False
     except Exception as e:
         print("Error occurred: ", e)
+        return False
 
 
 def generate_schedule(start_time_str, end_time_str, steps):
@@ -377,7 +380,7 @@ def main():
         driver.execute_script("document.body.style.zoom = '33%';")
         result = schedule_emails(driver, start_time=schedule_time)
         if result is False:
-            inter = i + inter -1
+            inter = i - 1
         # time.sleep(10)  # Adding delay between scheduling emails to avoid rate limiting or server overload
     print("Yay!!!!!!!!!!!")
     driver.quit()

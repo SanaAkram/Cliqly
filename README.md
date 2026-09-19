@@ -1,116 +1,83 @@
-# Cliqly Installation Setup
+# Cliqly
 
-## Setting Up Python 3.12 and Required Packages on a MacBook Using the Command Line
+A Selenium automation bot that **schedules email-campaign sends** in the Cliqly "SendMailPro" web panel, so a whole day's worth of sends can be queued in one run instead of clicking through the form dozens of times.
 
-This guide will walk you through the process of setting up Python 3.12 on your MacBook using the command line, installing PyCharm, managing your project dependencies, and cloning the Cliqly repository from GitHub.
+## What it does
 
-## Table of Contents
-1. [Installing Python 3.12 Using Command Line](#installing-python-312-using-command-line)
-2. [Installing PyCharm](#installing-pycharm)
-3. [Cloning the Git Repository](#cloning-the-git-repository)
-4. [Setting Up Your Project](#setting-up-your-project)
-5. [Installing Required Libraries](#installing-required-libraries)
+1. Opens a Chrome window and logs in to the Cliqly member area.
+2. Opens the SendMailPro **Schedule** page.
+3. Generates a list of send times between a start and an end time, evenly spaced (the default is 04:00 → 17:20 split into steps of about 200 minutes — see `generate_schedule`).
+4. For each time slot it fills in the scheduling form automatically:
+   - sets the number of openers to send to,
+   - chooses "Enter new link to send the clicks to" and enters the tracking link,
+   - sets the sender name,
+   - picks the send **date** (a configurable number of days ahead) and the **hour / minute** for that slot,
+   - clicks through the steps and confirms the creative.
+5. Retries any click that fails (the panel is slow and elements often are not clickable straight away) and resumes from the failed slot instead of starting over.
 
-## Installing Python 3.12 Using Command Line
+## How it works
 
-1. **Install Homebrew:**
-   - Open Terminal.
-   - Install Homebrew by running the following command:
-     ```sh
-     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-     ```
-   - Follow the on-screen instructions to complete the installation.
+```
+main()
+ ├─ webdriver.Chrome()                      (Selenium 4 resolves the driver itself)
+ ├─ login_to_system(driver)                 → /member/sendmailpro3/schedule
+ ├─ generate_schedule("04:00", "17:20", n)  → list of send times
+ └─ for each time:
+      schedule_emails(driver, start_time)
+        ├─ openers_data  ← number of recipients
+        ├─ click "next step" / creative box (click_until_success helpers retry with back-off)
+        ├─ choose tracking-link option + enter link, from-name
+        ├─ select date (today + N days), hour, minute (Select dropdowns)
+        └─ submit → returns False on failure → main() re-runs from that slot
+```
 
-2. **Update Homebrew:**
-   - After installing Homebrew, update it to make sure you have the latest version and package information:
-     ```sh
-     brew update
-     ```
+The page is zoomed to 33 % in the browser so the long form fits on screen without scrolling.
 
-3. **Install Python 3.12:**
-   - Use Homebrew to install Python 3.12:
-     ```sh
-     brew install python@3.12
-     ```
+## Stack
 
-4. **Verify the Installation:**
-   - Check the installed version of Python:
-     ```sh
-     python3.12 --version
-     ```
-   - You should see something like `Python 3.12.x`.
+- Python 3.12 (3.9+ should work)
+- `selenium` 4.x — browser automation
+- Google Chrome
+- Other pinned packages are listed in `requirements.txt` (only Selenium is needed by `main.py`)
 
-5. **Set Up Python 3.12 as the Default Python Version (Optional):**
-   - If you want to use Python 3.12 as your default Python version, you can update your shell profile:
-     ```sh
-     echo 'export PATH="/usr/local/opt/python@3.12/bin:$PATH"' >> ~/.zshrc
-     source ~/.zshrc
-     ```
-   - Verify the update by running:
-     ```sh
-     python3 --version
-     ```
+## Install
 
-## Installing PyCharm
+```bash
+git clone https://github.com/SanaAkram/Cliqly.git
+cd Cliqly
 
-1. **Download PyCharm:**
-   - Open your web browser and go to the official JetBrains website: [PyCharm Downloads](https://www.jetbrains.com/pycharm/download/)
-   - Select the Community Edition (free) or the Professional Edition (paid) and download the installer.
+python3.12 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
 
-2. **Install PyCharm:**
-   - Open the downloaded `.dmg` file.
-   - Drag and drop the PyCharm icon into the Applications folder.
-   - Open PyCharm from the Applications folder.
+pip install -r requirements.txt   # or just: pip install selenium
+```
 
-## Cloning the Git Repository
+macOS quick setup (Homebrew): `brew install python@3.12` then the commands above; PyCharm is optional — open the folder and select the `venv` interpreter.
 
-1. **Open Terminal:**
-   - Navigate to the directory where you want to clone the repository:
-     ```sh
-     cd path/to/your/directory
-     ```
+## Configure
 
-2. **Clone the Repository:**
-   - Run the following command to clone the Cliqly repository:
-     ```sh
-     git clone https://github.com/SanaAkram/Cliqly.git
-     ```
+Everything you would tweak lives in `main.py`:
 
-3. **Navigate to the Project Directory:**
-   - Change to the project directory:
-     ```sh
-     cd Cliqly
-     ```
+| What | Where |
+|---|---|
+| Your Cliqly login | `login_to_system()` — **use your own account and keep credentials out of git** (read them from environment variables rather than typing them into the file) |
+| Send window and spacing | `generate_schedule("04:00", "17:20", 200)` in `main()` |
+| Openers per send | `openers_data.send_keys("20000")` |
+| Tracking link and sender name | inside `schedule_emails()` |
+| How many days ahead to schedule | `timedelta(days=3)` in `schedule_emails()` |
+| Resume from a later slot | `inter = 0` in `main()` (set to the slot index to skip) |
 
+If Chrome/ChromeDriver is not found, put a matching `chromedriver` on your `PATH` (or point `chromedriver_path` at it).
 
-## Setting Up Your Project
+## Run
 
-1. **Create a Virtual Environment:**
-   - Create a virtual environment in the project directory:
-     ```sh
-     python3.12 -m venv venv
-     ```
+```bash
+python main.py
+```
 
-2. **Activate the Virtual Environment:**
-   - Activate the virtual environment:
-     ```sh
-     source venv/bin/activate
-     ```
+A Chrome window opens and works through the schedule; the terminal prints each slot as it is queued and ends with a completion message.
 
-3. **Configure the Python Interpreter in PyCharm:**
-   - Open PyCharm.
-   - Click on "Open" and select the cloned repository.
-   - Go to `PyCharm > Preferences` (or `File > Settings` on Windows/Linux).
-   - Navigate to `Project: Cliqly > Python Interpreter`.
-   - Ensure that the virtual environment you created is selected. If not, add it by clicking on the gear icon and selecting `Add...`.
+## Notes
 
-## Installing Required Libraries
-
-1. **Install Libraries Using Command Line:**
-   - With the virtual environment activated, install the required libraries:
-     ```sh
-     pip install requests beautifulsoup4 lxml pandas
-     ```
-
-## Conclusion
-
+- This automates a third-party web UI; if Cliqly changes element IDs (`openers_data`, `subsTypeBtn`, `creativeBox_1`, …) the selectors in `main.py` need updating.
+- Use only with your own Cliqly account and follow Cliqly's terms and anti-spam rules for the campaigns you schedule.
